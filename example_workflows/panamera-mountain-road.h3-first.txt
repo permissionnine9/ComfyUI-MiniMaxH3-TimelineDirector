@@ -1,0 +1,28 @@
+subject_definitions:
+<Picture 1> is the S-shaped mountain road seen in aerial view: pale asphalt climbing across a forested slope in one long S, folding back on itself as it rises, with a metal guardrail along the outer edge of every bend and dense pine cover closing in on both sides. It also anchors the opening aerial composition of [Shot 1] and the road layout carried into [Shot 2] and [Shot 5].
+<Picture 3> is the woman; her facial identity, hairstyle, build, and clothing follow that image exactly. In this scene she is seated at the wheel with both hands resting on the rim in a relaxed, practiced grip.
+<Picture 4> is the Porsche Panamera; its body shape, paint color, wheels, trim, and interior surfaces follow that image exactly.
+<Audio 1> is the voice-timbre reference for <Picture 3> (S1). It supplies only her vocal timbre, pitch, and singing delivery; its own words and melody are not carried into the target video, because the sung line in this video comes from this prompt.
+
+summary:
+[reference generation + audio reference] The target video follows <Picture 3> driving <Picture 4> up the S-shaped climb of <Picture 1> while singing a single line in Chinese. <Picture 1> anchors the opening aerial composition, <Picture 3> anchors her identity, <Picture 4> anchors the car, and <Audio 1> supplies her singing timbre. Five shots descend from an aerial establishing view into the car, hold on a detail insert and a long interior close-up while she sings, then release upward into a closing aerial.
+
+retention_analysis:
+<Picture 1> (appears in [Shot 1], [Shot 2], [Shot 5]): fully_preserved - the road's S-curve, its rising line across the slope, the guardrail, the forested slope, and the high downward viewpoint of the opening shot are retained.
+<Picture 3> (appears in [Shot 2], [Shot 3], [Shot 4]): fully_preserved - her facial identity, hairstyle, build, and clothing are retained.
+<Picture 4> (appears in [Shot 1], [Shot 2], [Shot 4], [Shot 5]): fully_preserved - the Panamera's body shape, paint color, wheels, trim, and interior surfaces are retained.
+<Audio 1>: reference - its vocal timbre and singing delivery guide <Picture 3> (S1) without copying the original signal.
+
+detailed_description:
+The target video is in a polished automotive-film style, with natural late-afternoon light, a slightly warm palette, and a shallow depth of field. The sequence is one continuous camera arc: down from the sky, into the car, onto a detail, into her face, then out.
+[Shot 1] The shot begins from <Picture 1> and holds that high downward view of the mountain road. <Picture 1> fills the frame: pale asphalt climbs the forested slope in one long S, folding back on itself as it rises, a metal guardrail runs the outer edge of every bend, and dense pine cover closes in on both sides. <Picture 4> is a small dark shape working up the road below. The camera descends steadily, tilting down just enough to keep the car inside the frame, so the S widens beneath the lens and the car grows into a readable silhouette against the sunlit slope.
+[Shot 2] At 00:02.200, the shot cuts to a parallel tracking shot running alongside <Picture 4> from its left at the car's own speed. The camera holds the Panamera in a medium three-quarter view, the guardrail and pine trunks of <Picture 1> streaking past behind it, low sun raking the flank and breaking into moving highlights along the roofline. <Picture 3> is clearly visible through the driver's window in profile, both hands resting on the wheel rim in a relaxed, practiced grip, her shoulders settling into the bend, her lips already moving in song.
+[Shot 3] At 00:03.600, the shot cuts to a locked-off extreme close-up of <Picture 3>'s right hand on the wheel rim. Her fingers lie relaxed over the leather, a single line of stitching running across the frame, and the low sun catches the edge of her knuckles. As the road turns into the next bend of the S, her grip tightens slightly, the fingertips pressing into the rim, and the wheel turns a few degrees beneath her hand.
+[Shot 4] At 00:04.400, the shot cuts to an interior close-up of <Picture 3> (S1), framed from the passenger side at eye level. The dashboard of <Picture 4> and the upper rim of the wheel sit soft in the lower foreground, and the road smears past the windshield behind her. The camera pushes in slowly, tightening from a medium close-up into a close-up as she takes her eyes off the road and sings in a low, unhurried register, lips shaping the line, <d>[Chinese] 让我走在每一条街道，我相信是从来都不曾平静。</d> Her voice carries the timbre referenced from <Audio 1>. The push-in continues at the same slow rate throughout, and she holds the last syllable before bringing her eyes back to the road.
+[Shot 5] At 00:10.400, the shot cuts to a wide aerial view looking down on <Picture 1>. <Picture 4> is a small dark shape working up through the S-bends, its roof catching the low sun in flashes between the trees. The camera rises and pulls back steadily until the road reads as a pale ribbon across the forested slope, the car still climbing, and the ridge folds the road from view.
+
+overall_soundscape:
+The engine note of <Picture 4> rises and falls with the bends, layered over constant tire noise on asphalt and wind moving past the open window. Birdsong and the rustle of pine needles sit well behind it. Through [Shot 3] the same sung melody continues wordlessly under the engine note, and the sung line lands inside [Shot 4].
+
+non_diegetic_music:
+N/A

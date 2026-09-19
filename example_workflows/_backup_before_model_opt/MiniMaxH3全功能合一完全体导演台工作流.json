@@ -1,8 +1,8 @@
 {
   "id": "9b12006b-e843-4821-a446-95e8f8ccff69",
   "revision": 0,
-  "last_node_id": 23,
-  "last_link_id": 39,
+  "last_node_id": 20,
+  "last_link_id": 30,
   "nodes": [
     {
       "id": 6,
@@ -70,12 +70,12 @@
         "Node name for S&R": "CLIPLoader"
       },
       "widgets_values": [
-        "minimax-h3/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "minimax_h3\\qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
         "minimax",
         "default"
       ],
       "widgets_values_named": {
-        "clip_name": "minimax-h3/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "clip_name": "minimax_h3\\qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
         "type": "minimax",
         "device": "default"
       }
@@ -110,10 +110,10 @@
         "Node name for S&R": "VAELoader"
       },
       "widgets_values": [
-        "minimax-h3/minimax_h3_video_vae_fp16.safetensors"
+        "minimax_h3_video_vae_fp16.safetensors"
       ],
       "widgets_values_named": {
-        "vae_name": "minimax-h3/minimax_h3_video_vae_fp16.safetensors"
+        "vae_name": "minimax_h3_video_vae_fp16.safetensors"
       }
     },
     {
@@ -146,10 +146,10 @@
         "Node name for S&R": "VAELoader"
       },
       "widgets_values": [
-        "minimax-h3/minimax_h3_audio_vae_fp32.safetensors"
+        "minimax_h3_audio_vae_fp32.safetensors"
       ],
       "widgets_values_named": {
-        "vae_name": "minimax-h3/minimax_h3_audio_vae_fp32.safetensors"
+        "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
       }
     },
     {
@@ -170,7 +170,7 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 38
+          "link": 28
         }
       ],
       "outputs": [
@@ -189,12 +189,12 @@
       },
       "widgets_values": [
         "simple",
-        20,
+        8,
         1
       ],
       "widgets_values_named": {
         "scheduler": "simple",
-        "steps": 20,
+        "steps": 8,
         "denoise": 1
       }
     },
@@ -268,7 +268,7 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 39
+          "link": 29
         },
         {
           "name": "clip",
@@ -365,7 +365,8 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            37
+            28,
+            29
           ]
         }
       ],
@@ -375,11 +376,11 @@
         "Node name for S&R": "UNETLoader"
       },
       "widgets_values": [
-        "minimax-h3/minimax_h3_ref2va_int8_convrot.safetensors",
+        "minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors",
         "default"
       ],
       "widgets_values_named": {
-        "unet_name": "minimax-h3/minimax_h3_ref2va_int8_convrot.safetensors",
+        "unet_name": "minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors",
         "weight_dtype": "default"
       }
     },
@@ -491,51 +492,6 @@
         "timeline_data": "{\"version\":5,\"fps\":24,\"globalPrompt\":\"\",\"selection\":{\"start\":0,\"duration\":5},\"videoAudioEnabled\":true,\"videoClips\":[],\"images\":[],\"audios\":[{\"id\":\"mtvcfi39-umtp5d\",\"file\":\"minimax_h3_timeline_director/1789033627927_5x9fi_0034.wav\",\"name\":\"0034.wav\",\"duration\":15.30195,\"trimStart\":0,\"audioMode\":\"reference\"}],\"segmentConfig\":{\"count\":0,\"activeIndex\":0,\"mode\":\"legacy\",\"segments\":[]}}",
         "minimax_h3_timeline": ""
       }
-    },
-    {
-      "id": 23,
-      "type": "MiniMaxH3SigmaShift",
-      "pos": [
-        361.09560608142135,
-        -441.66511469967674
-      ],
-      "size": [
-        320,
-        110
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 37
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            38,
-            39
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.33.0",
-        "Node name for S&R": "MiniMaxH3SigmaShift"
-      },
-      "widgets_values": [
-        12.0,
-        3.0
-      ],
-      "widgets_values_named": {
-        "shift_video": 12.0,
-        "shift_audio": 3.0
-      }
     }
   ],
   "links": [
@@ -604,36 +560,28 @@
       "VIDEO"
     ],
     [
-      30,
-      20,
-      2,
-      8,
-      4,
-      "MINIMAX_H3_FINITE_SEGMENT_PLAN"
-    ],
-    [
-      37,
+      28,
       1,
-      0,
-      23,
-      0,
-      "MODEL"
-    ],
-    [
-      38,
-      23,
       0,
       5,
       0,
       "MODEL"
     ],
     [
-      39,
-      23,
+      29,
+      1,
       0,
       8,
       0,
       "MODEL"
+    ],
+    [
+      30,
+      20,
+      2,
+      8,
+      4,
+      "MINIMAX_H3_FINITE_SEGMENT_PLAN"
     ]
   ],
   "groups": [],
@@ -654,6 +602,10 @@
       "4_minimax_h3_audio_vae_fp32.safetensors": {
         "hash": "",
         "size": 605254808
+      },
+      "1_minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors": {
+        "hash": "",
+        "size": 20980178976
       }
     },
     "frontendVersion": "1.51.10",

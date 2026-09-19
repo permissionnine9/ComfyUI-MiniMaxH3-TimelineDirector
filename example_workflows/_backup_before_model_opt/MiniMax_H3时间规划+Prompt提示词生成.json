@@ -1,8 +1,8 @@
 {
   "id": "42476cc0-ba47-4042-ad72-3802b573afb3",
   "revision": 0,
-  "last_node_id": 215,
-  "last_link_id": 395,
+  "last_node_id": 212,
+  "last_link_id": 386,
   "nodes": [
     {
       "id": 126,
@@ -22,7 +22,7 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 395
+          "link": 386
         },
         {
           "name": "conditioning",
@@ -118,12 +118,12 @@
         ]
       },
       "widgets_values": [
-        "minimax-h3/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "minimax_h3\\qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
         "minimax",
         "default"
       ],
       "widgets_values_named": {
-        "clip_name": "minimax-h3/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "clip_name": "minimax_h3\\qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
         "type": "minimax",
         "device": "default"
       }
@@ -166,10 +166,10 @@
         ]
       },
       "widgets_values": [
-        "minimax-h3/minimax_h3_video_vae_fp16.safetensors"
+        "minimax_h3_video_vae_fp16.safetensors"
       ],
       "widgets_values_named": {
-        "vae_name": "minimax-h3/minimax_h3_video_vae_fp16.safetensors"
+        "vae_name": "minimax_h3_video_vae_fp16.safetensors"
       }
     },
     {
@@ -210,10 +210,10 @@
         ]
       },
       "widgets_values": [
-        "minimax-h3/minimax_h3_audio_vae_fp32.safetensors"
+        "minimax_h3_audio_vae_fp32.safetensors"
       ],
       "widgets_values_named": {
-        "vae_name": "minimax-h3/minimax_h3_audio_vae_fp32.safetensors"
+        "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
       }
     },
     {
@@ -298,7 +298,7 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 394
+          "link": 385
         }
       ],
       "outputs": [
@@ -317,12 +317,12 @@
       },
       "widgets_values": [
         "simple",
-        20,
+        8,
         1
       ],
       "widgets_values_named": {
         "scheduler": "simple",
-        "steps": 20,
+        "steps": 8,
         "denoise": 1
       }
     },
@@ -787,7 +787,8 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            393
+            385,
+            386
           ]
         }
       ],
@@ -804,11 +805,11 @@
         ]
       },
       "widgets_values": [
-        "minimax-h3/minimax_h3_ref2va_int8_convrot.safetensors",
+        "minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors",
         "default"
       ],
       "widgets_values_named": {
-        "unet_name": "minimax-h3/minimax_h3_ref2va_int8_convrot.safetensors",
+        "unet_name": "minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors",
         "weight_dtype": "default"
       }
     },
@@ -955,51 +956,6 @@
         "generation_seconds": 7.1,
         "timeline_data": "{\"version\":5,\"fps\":24,\"globalPrompt\":\"\",\"selection\":{\"start\":0,\"duration\":7.078613613584206},\"videoAudioEnabled\":true,\"videoClips\":[],\"images\":[],\"audios\":[],\"segmentConfig\":{\"count\":0,\"activeIndex\":0,\"mode\":\"legacy\",\"segments\":[]}}",
         "minimax_h3_timeline": ""
-      }
-    },
-    {
-      "id": 215,
-      "type": "MiniMaxH3SigmaShift",
-      "pos": [
-        -883.0984969025762,
-        4941.480443405995
-      ],
-      "size": [
-        320,
-        110
-      ],
-      "flags": {},
-      "order": 7,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 393
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            394,
-            395
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.33.0",
-        "Node name for S&R": "MiniMaxH3SigmaShift"
-      },
-      "widgets_values": [
-        12.0,
-        3.0
-      ],
-      "widgets_values_named": {
-        "shift_video": 12.0,
-        "shift_audio": 3.0
       }
     }
   ],
@@ -1189,24 +1145,16 @@
       "STRING"
     ],
     [
-      393,
+      385,
       127,
-      0,
-      215,
-      0,
-      "MODEL"
-    ],
-    [
-      394,
-      215,
       0,
       124,
       0,
       "MODEL"
     ],
     [
-      395,
-      215,
+      386,
+      127,
       0,
       126,
       0,
@@ -1297,6 +1245,10 @@
       "120_minimax_h3_audio_vae_fp32.safetensors": {
         "hash": "",
         "size": 605254808
+      },
+      "127_minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors": {
+        "hash": "",
+        "size": 20980178976
       }
     }
   },
