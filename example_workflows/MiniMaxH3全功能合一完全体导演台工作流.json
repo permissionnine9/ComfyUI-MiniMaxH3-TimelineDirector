@@ -1,8 +1,8 @@
 {
   "id": "9b12006b-e843-4821-a446-95e8f8ccff69",
   "revision": 0,
-  "last_node_id": 23,
-  "last_link_id": 39,
+  "last_node_id": 24,
+  "last_link_id": 41,
   "nodes": [
     {
       "id": 6,
@@ -70,12 +70,12 @@
         "Node name for S&R": "CLIPLoader"
       },
       "widgets_values": [
-        "minimax-h3/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "minimax-h3/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
         "minimax",
         "default"
       ],
       "widgets_values_named": {
-        "clip_name": "minimax-h3/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "clip_name": "minimax-h3/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
         "type": "minimax",
         "device": "default"
       }
@@ -189,12 +189,12 @@
       },
       "widgets_values": [
         "simple",
-        20,
+        8,
         1
       ],
       "widgets_values_named": {
         "scheduler": "simple",
-        "steps": 20,
+        "steps": 8,
         "denoise": 1
       }
     },
@@ -365,7 +365,7 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            37
+            40
           ]
         }
       ],
@@ -375,11 +375,11 @@
         "Node name for S&R": "UNETLoader"
       },
       "widgets_values": [
-        "minimax-h3/minimax_h3_ref2va_int8_convrot.safetensors",
+        "minimax-h3/minimax_h3_ref2va_pruned_int8_convrot.safetensors",
         "default"
       ],
       "widgets_values_named": {
-        "unet_name": "minimax-h3/minimax_h3_ref2va_int8_convrot.safetensors",
+        "unet_name": "minimax-h3/minimax_h3_ref2va_pruned_int8_convrot.safetensors",
         "weight_dtype": "default"
       }
     },
@@ -478,18 +478,62 @@
         "Node name for S&R": "MiniMaxH3TimelinePlanner"
       },
       "widgets_values": [
-        1344,
-        768,
+        832,
+        480,
         5,
         "{\"version\":5,\"fps\":24,\"globalPrompt\":\"\",\"selection\":{\"start\":0,\"duration\":5},\"videoAudioEnabled\":true,\"videoClips\":[],\"images\":[],\"audios\":[{\"id\":\"mtvcfi39-umtp5d\",\"file\":\"minimax_h3_timeline_director/1789033627927_5x9fi_0034.wav\",\"name\":\"0034.wav\",\"duration\":15.30195,\"trimStart\":0,\"audioMode\":\"reference\"}],\"segmentConfig\":{\"count\":0,\"activeIndex\":0,\"mode\":\"legacy\",\"segments\":[]}}",
         ""
       ],
       "widgets_values_named": {
-        "width": 1344,
-        "height": 768,
+        "width": 832,
+        "height": 480,
         "generation_seconds": 5,
         "timeline_data": "{\"version\":5,\"fps\":24,\"globalPrompt\":\"\",\"selection\":{\"start\":0,\"duration\":5},\"videoAudioEnabled\":true,\"videoClips\":[],\"images\":[],\"audios\":[{\"id\":\"mtvcfi39-umtp5d\",\"file\":\"minimax_h3_timeline_director/1789033627927_5x9fi_0034.wav\",\"name\":\"0034.wav\",\"duration\":15.30195,\"trimStart\":0,\"audioMode\":\"reference\"}],\"segmentConfig\":{\"count\":0,\"activeIndex\":0,\"mode\":\"legacy\",\"segments\":[]}}",
         "minimax_h3_timeline": ""
+      }
+    },
+    {
+      "id": 24,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        30,
+        -620
+      ],
+      "size": [
+        500,
+        100
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 40
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            41
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "minimax-h3/minimax_h3_turbo_v4_step600_ema.safetensors",
+        1.0
+      ],
+      "widgets_values_named": {
+        "lora_name": "minimax-h3/minimax_h3_turbo_v4_step600_ema.safetensors",
+        "strength_model": 1.0
       }
     },
     {
@@ -510,7 +554,7 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 37
+          "link": 41
         }
       ],
       "outputs": [
@@ -612,8 +656,16 @@
       "MINIMAX_H3_FINITE_SEGMENT_PLAN"
     ],
     [
-      37,
+      40,
       1,
+      0,
+      24,
+      0,
+      "MODEL"
+    ],
+    [
+      41,
+      24,
       0,
       23,
       0,

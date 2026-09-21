@@ -1529,6 +1529,41 @@ async def preview_proxy(request: web.Request) -> web.Response:
             _PREVIEW_SEMAPHORE.release()
 
 
+_WORKFLOW_SAVE_SUBDIR = "money-printer"
+
+
+def _workflow_save_root() -> Path:
+    root = (
+        Path(folder_paths.get_user_directory()).resolve()
+        / "default" / "workflows" / _WORKFLOW_SAVE_SUBDIR
+    )
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+@PromptServer.instance.routes.post("/minimax_h3_timeline/save_workflow")
+async def save_workflow(request: web.Request) -> web.Response:
+    """Persist an externally assembled UI workflow into the user's workflow library."""
+
+    try:
+        payload = await _request_json(request)
+        workflow = payload.get("workflow")
+        if not isinstance(workflow, dict) or not workflow:
+            raise ValueError("Workflow must be a non-empty JSON object")
+        filename = str(payload.get("filename") or "").strip()
+        if len(filename) > 200 or not re.fullmatch(r"[\w\-. ]+\.json", filename, flags=re.UNICODE):
+            raise ValueError("Filename must end with .json and contain no path separators")
+        target = _workflow_save_root() / filename
+        with target.open("w", encoding="utf-8") as handle:
+            json.dump(workflow, handle, ensure_ascii=False, indent=2)
+        return web.json_response({"name": f"{_WORKFLOW_SAVE_SUBDIR}/{filename}"})
+    except ValueError as exc:
+        return web.json_response({"error": str(exc)}, status=400)
+    except Exception:
+        log.exception("Workflow save failed")
+        return web.json_response({"error": "Cannot save the workflow"}, status=400)
+
+
 def _encode_timeline_plan(
     plan: dict[str, Any], clip, vae, audio_vae, prompt: str, ref_image_size: str
 ) -> tuple[Any, Any, dict[str, Any], dict[str, Any]]:
