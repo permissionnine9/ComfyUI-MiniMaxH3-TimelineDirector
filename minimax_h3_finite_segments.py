@@ -401,6 +401,7 @@ class MiniMaxH3FiniteLatentContinuation(io.ComfyNode):
                 io.Conditioning.Input("positive"),
                 io.Latent.Input("target_latent"),
                 io.Int.Input("iteration", force_input=True),
+                io.Int.Input("segment_count", default=1, min=1, force_input=True),
                 io.Int.Input("overlap_frames", default=22, min=0, max=3592),
                 io.Boolean.Input("continue_audio_latent", default=True),
                 io.Model.Input("model"),
@@ -420,10 +421,15 @@ class MiniMaxH3FiniteLatentContinuation(io.ComfyNode):
 
     @classmethod
     def execute(
-        cls, positive, target_latent, iteration, overlap_frames,
-        continue_audio_latent, model, sigmas, previous_latent=None,
-        previous_images=None, vae=None, audio_vae=None,
+        cls, positive, target_latent, iteration, segment_count,
+        overlap_frames, continue_audio_latent, model, sigmas,
+        previous_latent=None, previous_images=None, vae=None, audio_vae=None,
     ):
+        print(
+            f"[MiniMaxH3TimelineDirector] Segment {int(iteration) + 1}/{int(segment_count)}: "
+            f"sampling starts (overlap {int(overlap_frames)} frames)",
+            flush=True,
+        )
         if int(overlap_frames) == 0:
             # Touching windows are independent: no video or audio continuation.
             return io.NodeOutput(positive, target_latent, 0, model)
@@ -576,6 +582,7 @@ class MiniMaxH3FiniteSegmentFinalize(io.ComfyNode):
                 io.Latent.Input("sampled_latent"),
                 io.Image.Input("images"),
                 io.Int.Input("iteration", force_input=True),
+                io.Int.Input("segment_count", default=1, min=1, force_input=True),
                 io.Int.Input("overlap_frames", default=22, min=0, max=3592),
                 io.Boolean.Input("trim_audio_head", default=True),
                 io.Audio.Input("audio", optional=True),
@@ -589,8 +596,8 @@ class MiniMaxH3FiniteSegmentFinalize(io.ComfyNode):
 
     @classmethod
     def execute(
-        cls, sampled_latent, images, iteration, overlap_frames,
-        trim_audio_head=True, audio=None,
+        cls, sampled_latent, images, iteration, segment_count,
+        overlap_frames, trim_audio_head=True, audio=None,
     ):
         trim_frames = 0 if int(iteration) <= 0 or int(overlap_frames) == 0 else _valid_guide_frames(int(overlap_frames))
         if images.shape[0] <= trim_frames:
@@ -609,6 +616,11 @@ class MiniMaxH3FiniteSegmentFinalize(io.ComfyNode):
             trimmed_audio["waveform"] = (
                 waveform[..., trim_samples:].clone() if trim_samples else waveform
             )
+        print(
+            f"[MiniMaxH3TimelineDirector] Segment {int(iteration) + 1}/{int(segment_count)}: "
+            f"finished ({int(trimmed_images.shape[0])} frames kept)",
+            flush=True,
+        )
         return io.NodeOutput(sampled_latent, trimmed_images, trimmed_audio)
 
 
@@ -751,7 +763,8 @@ class MiniMaxH3FiniteSegmentSampler(io.ComfyNode):
             )
             continuation_inputs = {
                 "positive": encoder.out(0), "target_latent": encoder.out(1),
-                "iteration": index, "overlap_frames": overlap,
+                "iteration": index, "segment_count": int(finite["segment_count"]),
+                "overlap_frames": overlap,
                 "continue_audio_latent": bool(continue_audio_latent) and locked_audio is None,
                 "model": model, "sigmas": sigmas,
             }
@@ -796,7 +809,8 @@ class MiniMaxH3FiniteSegmentSampler(io.ComfyNode):
             finalized = graph.node(
                 "MiniMaxH3FiniteSegmentFinalize", id=f"finalize_{number}",
                 sampled_latent=sampled.out(0), images=images.out(0), audio=audio.out(0),
-                iteration=index, overlap_frames=overlap,
+                iteration=index, segment_count=int(finite["segment_count"]),
+                overlap_frames=overlap,
                 trim_audio_head=not soft_audio,
             )
             current_images, current_audio = finalized.out(1), finalized.out(2)

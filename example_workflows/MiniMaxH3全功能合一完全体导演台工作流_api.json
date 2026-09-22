@@ -8,7 +8,7 @@
   "2": {
     "class_type": "CLIPLoader",
     "inputs": {
-      "clip_name": "minimax-h3/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "clip_name": "minimax-h3/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
       "type": "minimax"
     }
   },

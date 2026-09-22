@@ -150,11 +150,11 @@ video_mask,audio_mask=locked_latent['noise_mask'].unbind()
 assert audio_stream.shape[-1]==12 and torch.all(audio_stream==1)
 assert torch.all(video_mask==1) and torch.all(audio_mask==0)
 images=torch.zeros(39,2,2,3);audio={'sample_rate':24000,'waveform':torch.ones(1,1,39000)}
-out=finite.MiniMaxH3FiniteSegmentFinalize.execute({},images,2,0,True,audio)
+out=finite.MiniMaxH3FiniteSegmentFinalize.execute({},images,2,3,0,True,audio)
 assert out[1].shape[0]==39 and out[2]['waveform'].shape[-1]==39000
 previous=torch.rand(73,2,2,3)
 with patch.object(finite,'_apply_h3_guides',return_value='anchored') as guide:
-    out=finite.MiniMaxH3FiniteLatentContinuation.execute('positive',{},2,0,True,'model',None,{},previous,'vae','audio_vae')
+    out=finite.MiniMaxH3FiniteLatentContinuation.execute('positive',{},2,3,0,True,'model',None,{},previous,'vae','audio_vae')
     assert out[0]=='positive' and out[2]==0 and out[3]=='model'
     guide.assert_not_called()
 print('timeline segment planning and execution graph: PASS')
