@@ -70,7 +70,7 @@
         "Node name for S&R": "CLIPLoader"
       },
       "widgets_values": [
-        "minimax-h3/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "minimax/qwen3vl_32b_minimax_h3_bf16.safetensors",
         "minimax",
         "default"
       ],
@@ -110,7 +110,7 @@
         "Node name for S&R": "VAELoader"
       },
       "widgets_values": [
-        "minimax-h3/minimax_h3_video_vae_fp16.safetensors"
+        "minimax/minimax_h3_video_vae_fp16.safetensors"
       ],
       "widgets_values_named": {
         "vae_name": "minimax-h3/minimax_h3_video_vae_fp16.safetensors"
@@ -146,7 +146,7 @@
         "Node name for S&R": "VAELoader"
       },
       "widgets_values": [
-        "minimax-h3/minimax_h3_audio_vae_fp32.safetensors"
+        "minimax/minimax_h3_audio_vae_fp32.safetensors"
       ],
       "widgets_values_named": {
         "vae_name": "minimax-h3/minimax_h3_audio_vae_fp32.safetensors"
@@ -375,7 +375,7 @@
         "Node name for S&R": "UNETLoader"
       },
       "widgets_values": [
-        "minimax-h3/minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+        "minimax/minimax_h3_ref2va_int8_convrot.safetensors",
         "default"
       ],
       "widgets_values_named": {
@@ -528,7 +528,7 @@
         "Node name for S&R": "LoraLoaderModelOnly"
       },
       "widgets_values": [
-        "minimax-h3/minimax_h3_turbo_v4_step600_ema.safetensors",
+        "minimax/minimax_h3_turbo_v4_step600_ema.safetensors",
         1.0
       ],
       "widgets_values_named": {
