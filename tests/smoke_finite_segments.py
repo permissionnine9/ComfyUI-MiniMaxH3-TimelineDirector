@@ -91,11 +91,17 @@ def main():
     by_type = {}
     for node_id, node in graph.items():
         by_type.setdefault(node["class_type"], []).append((node_id, node["inputs"]))
+    assert "H3AudioRefineSampler" not in by_type  # 未接 refine model 时不展开
     assert len(by_type["MiniMaxH3TimelineEncoder"]) == 3
     assert len(by_type["MiniMaxH3FiniteLatentContinuation"]) == 3
     assert len(by_type["SamplerCustomAdvanced"]) == 3
     assert len(by_type["MiniMaxH3FiniteSegmentFinalize"]) == 3
-    assert len(by_type["ImageBatch"]) == 2
+    assert "ImageBatch" not in by_type
+    spools = sorted(by_type["MiniMaxH3FiniteFrameSpool"])
+    assert len(spools) == 3
+    assert "spool" not in spools[0][1]
+    assert "spool" in spools[1][1] and "spool" in spools[2][1]
+    assert len(by_type["MiniMaxH3FiniteFramesMaterialize"]) == 1
     assert len(by_type["AudioConcat"]) == 2
 
     encoders = sorted(by_type["MiniMaxH3TimelineEncoder"])
@@ -170,6 +176,25 @@ def main():
     )
 
     sample_rate = 16000
+    refined_output = finite.MiniMaxH3FiniteSegmentSampler.execute(
+        model=object(), clip=object(), vae=object(), audio_vae=object(),
+        finite_plan=finite_plan, sampler=object(),
+        sigmas=torch.linspace(1.0, 0.0, 5), seed=100,
+        continue_audio_latent=True, ref_image_size="match",
+        audio_refine_model=object(), audio_refine_steps=6, audio_refine_denoise=0.5,
+    )
+    refined_nodes = {
+        node_id.rsplit(".", 1)[-1]: node["inputs"]
+        for node_id, node in refined_output.expand.items()
+        if node["class_type"] == "H3AudioRefineSampler"
+    }
+    assert len(refined_nodes) == 3
+    assert all(inp["audio_denoise"] == 0.5 for inp in refined_nodes.values())
+    assert [refined_nodes[f"audio_refine_{n}"]["seed"] for n in (1, 2, 3)] == [100, 101, 102]
+    assert all(
+        refined_nodes[f"audio_refine_{n}"]["latent"][0].endswith(f"sample_{n}")
+        for n in (1, 2, 3)
+    )
     accumulated = {
         "waveform": torch.arange(sample_rate * 4, dtype=torch.float32).reshape(1, 1, -1),
         "sample_rate": sample_rate,
@@ -184,9 +209,11 @@ def main():
         "waveform": torch.zeros((1, 2, sample_rate * 63)),
         "sample_rate": sample_rate,
     }
-    exact_images, exact_audio = finite.MiniMaxH3FiniteOutputTrim.execute(
-        images, long_audio, output_frames=1440,
+    spooled = finite.MiniMaxH3FiniteFrameSpool.execute(None, images)[0]
+    trimmed_spool, exact_audio = finite.MiniMaxH3FiniteOutputTrim.execute(
+        spooled, long_audio, output_frames=1440,
     )[:2]
+    exact_images = finite.MiniMaxH3FiniteFramesMaterialize.execute(trimmed_spool)[0]
     assert exact_images.shape[0] == 1440
     assert exact_images[-1].item() == 1439
     assert exact_audio["waveform"].shape[-1] == sample_rate * 60

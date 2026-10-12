@@ -34,7 +34,7 @@
         "Node name for S&R": "KSamplerSelect"
       },
       "widgets_values": [
-        "euler"
+        "res_multistep"
       ],
       "widgets_values_named": {
         "sampler_name": "euler"
@@ -189,7 +189,7 @@
       },
       "widgets_values": [
         "simple",
-        8,
+        20,
         1
       ],
       "widgets_values_named": {
@@ -365,7 +365,7 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            40
+            41
           ]
         }
       ],
@@ -493,50 +493,6 @@
       }
     },
     {
-      "id": 24,
-      "type": "LoraLoaderModelOnly",
-      "pos": [
-        30,
-        -620
-      ],
-      "size": [
-        500,
-        100
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 40
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            41
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.34.0",
-        "Node name for S&R": "LoraLoaderModelOnly"
-      },
-      "widgets_values": [
-        "minimax_h3_turbo_v4_step600_ema.safetensors",
-        1.0
-      ],
-      "widgets_values_named": {
-        "lora_name": "minimax_h3_turbo_v4_step600_ema.safetensors",
-        "strength_model": 1.0
-      }
-    },
-    {
       "id": 23,
       "type": "MiniMaxH3SigmaShift",
       "pos": [
@@ -656,16 +612,8 @@
       "MINIMAX_H3_FINITE_SEGMENT_PLAN"
     ],
     [
-      40,
-      1,
-      0,
-      24,
-      0,
-      "MODEL"
-    ],
-    [
       41,
-      24,
+      1,
       0,
       23,
       0,

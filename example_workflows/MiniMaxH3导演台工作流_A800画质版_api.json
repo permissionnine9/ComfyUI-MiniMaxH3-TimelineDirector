@@ -2,7 +2,7 @@
   "6": {
     "class_type": "KSamplerSelect",
     "inputs": {
-      "sampler_name": "euler"
+      "sampler_name": "res_multistep"
     }
   },
   "2": {
@@ -32,7 +32,7 @@
         0
       ],
       "scheduler": "simple",
-      "steps": 8,
+      "steps": 20,
       "denoise": 1
     }
   },
@@ -113,22 +113,11 @@
       "timeline_data": "{\"version\":5,\"fps\":24,\"globalPrompt\":\"\",\"selection\":{\"start\":0,\"duration\":5},\"videoAudioEnabled\":true,\"videoClips\":[],\"images\":[],\"audios\":[{\"id\":\"mtvcfi39-umtp5d\",\"file\":\"minimax_h3_timeline_director/1789033627927_5x9fi_0034.wav\",\"name\":\"0034.wav\",\"duration\":15.30195,\"trimStart\":0,\"audioMode\":\"reference\"}],\"segmentConfig\":{\"count\":0,\"activeIndex\":0,\"mode\":\"legacy\",\"segments\":[]}}"
     }
   },
-  "24": {
-    "class_type": "LoraLoaderModelOnly",
-    "inputs": {
-      "model": [
-        "1",
-        0
-      ],
-      "lora_name": "minimax_h3_turbo_v4_step600_ema.safetensors",
-      "strength_model": 1.0
-    }
-  },
   "23": {
     "class_type": "MiniMaxH3SigmaShift",
     "inputs": {
       "model": [
-        "24",
+        "1",
         0
       ],
       "shift_video": 12.0,

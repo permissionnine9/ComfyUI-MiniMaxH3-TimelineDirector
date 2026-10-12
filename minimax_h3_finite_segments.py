@@ -4,11 +4,15 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import re
+import uuid
 from functools import lru_cache
 from pathlib import Path
 
+import numpy as np
 import torch
+import folder_paths
 from comfy.nested_tensor import NestedTensor
 from comfy_api.latest import io
 from comfy_execution.graph_utils import GraphBuilder
@@ -33,6 +37,28 @@ from .minimax_h3_timeline_director import (
 
 H3_FPS = 24
 FiniteSegmentPlan = io.Custom("MINIMAX_H3_FINITE_SEGMENT_PLAN")
+FrameSpool = io.Custom("MINIMAX_H3_FRAME_SPOOL")
+
+
+def _spool_segment_frames(spool: dict | None, frames) -> dict:
+    """Append one segment's decoded frames to an on-disk float16 spool.
+
+    Long renders accumulate tens of gigabytes of decoded frames; joining them
+    with ImageBatch keeps every intermediate batch resident in RAM and can OOM
+    the host container.  A per-segment spool file holds one segment in RAM at
+    a time and its page cache is reclaimable under memory pressure.
+    """
+    count = int(frames.shape[0])
+    if count < 1:
+        raise ValueError("A spooled segment must contain at least one frame")
+    root = Path(folder_paths.get_temp_directory()) / "finite_frames"
+    root.mkdir(parents=True, exist_ok=True)
+    path = root / f"frames_{uuid.uuid4().hex}.npy"
+    np.save(path, frames.detach().cpu().to(torch.float16).numpy())
+    files = list(spool["files"]) if spool is not None else []
+    kept = int(spool["kept"]) if spool is not None else 0
+    files.append(str(path))
+    return {"files": files, "kept": kept + count}
 
 
 @lru_cache(maxsize=8)
@@ -602,7 +628,10 @@ class MiniMaxH3FiniteSegmentFinalize(io.ComfyNode):
         trim_frames = 0 if int(iteration) <= 0 or int(overlap_frames) == 0 else _valid_guide_frames(int(overlap_frames))
         if images.shape[0] <= trim_frames:
             raise ValueError(f"This segment has only {images.shape[0]} frames; cannot remove a {trim_frames}-frame overlap")
-        trimmed_images = images[trim_frames:].clone() if trim_frames else images
+        # The trimmed frames go straight to the on-disk spool, whose float16
+        # conversion already copies them; keeping a view avoids a second
+        # segment-sized tensor resident in RAM.
+        trimmed_images = images[trim_frames:] if trim_frames else images
         trimmed_audio = audio
         if audio is not None and bool(trim_audio_head):
             waveform = audio.get("waveform")
@@ -622,6 +651,62 @@ class MiniMaxH3FiniteSegmentFinalize(io.ComfyNode):
             flush=True,
         )
         return io.NodeOutput(sampled_latent, trimmed_images, trimmed_audio)
+
+
+class MiniMaxH3FiniteFrameSpool(io.ComfyNode):
+    """Internal helper that spools one segment's frames to disk."""
+
+    @classmethod
+    def define_schema(cls):
+        return io.Schema(
+            node_id="MiniMaxH3FiniteFrameSpool",
+            display_name="MiniMax H3 Finite Frame Spool (Internal)",
+            category="MiniMax H3/Internal",
+            is_dev_only=True,
+            inputs=[
+                FrameSpool.Input("spool", optional=True),
+                io.Image.Input("frames"),
+            ],
+            outputs=[FrameSpool.Output(display_name="Spooled Frames")],
+        )
+
+    @classmethod
+    def execute(cls, spool=None, frames=None):
+        return io.NodeOutput(_spool_segment_frames(spool, frames))
+
+
+class MiniMaxH3FiniteFramesMaterialize(io.ComfyNode):
+    """Internal helper that reads the frame spool back as one image tensor."""
+
+    @classmethod
+    def define_schema(cls):
+        return io.Schema(
+            node_id="MiniMaxH3FiniteFramesMaterialize",
+            display_name="MiniMax H3 Finite Frames Materialize (Internal)",
+            category="MiniMax H3/Internal",
+            is_dev_only=True,
+            inputs=[FrameSpool.Input("spool")],
+            outputs=[io.Image.Output(display_name="Merged Frames")],
+        )
+
+    @classmethod
+    def execute(cls, spool):
+        remaining = int(spool["kept"])
+        chunks = []
+        for path in spool["files"]:
+            if remaining <= 0:
+                break
+            data = np.load(path)
+            take = min(remaining, int(data.shape[0]))
+            chunks.append(torch.from_numpy(np.ascontiguousarray(data[:take], dtype=np.float32)))
+            remaining -= take
+        frames = chunks[0] if len(chunks) == 1 else torch.cat(chunks, dim=0)
+        for path in spool["files"]:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+        return io.NodeOutput(frames)
 
 
 class MiniMaxH3FiniteAudioTrimTail(io.ComfyNode):
@@ -666,25 +751,26 @@ class MiniMaxH3FiniteOutputTrim(io.ComfyNode):
             category="MiniMax H3/Internal",
             is_dev_only=True,
             inputs=[
-                io.Image.Input("images"),
+                FrameSpool.Input("frames"),
                 io.Audio.Input("audio"),
                 io.Int.Input("output_frames", default=5, min=1, force_input=True),
             ],
             outputs=[
-                io.Image.Output(display_name="Trimmed Frames"),
+                FrameSpool.Output(display_name="Trimmed Frames"),
                 io.Audio.Output(display_name="Trimmed Audio"),
             ],
         )
 
     @classmethod
-    def execute(cls, images, audio, output_frames):
+    def execute(cls, frames, audio, output_frames):
         frame_count = int(output_frames)
-        if int(images.shape[0]) < frame_count:
+        if int(frames["kept"]) < frame_count:
             raise ValueError(
-                f"Generated output has only {images.shape[0]} frames; "
+                f"Generated output has only {frames['kept']} frames; "
                 f"cannot restore a {frame_count}-frame source duration"
             )
-        trimmed_images = images[:frame_count].clone()
+        trimmed_frames = dict(frames)
+        trimmed_frames["kept"] = frame_count
         trimmed_audio = audio
         waveform = audio.get("waveform") if isinstance(audio, dict) else None
         sample_rate = int(audio.get("sample_rate", 0)) if isinstance(audio, dict) else 0
@@ -693,7 +779,7 @@ class MiniMaxH3FiniteOutputTrim(io.ComfyNode):
             if waveform.shape[-1] > output_samples:
                 trimmed_audio = dict(audio)
                 trimmed_audio["waveform"] = waveform[..., :output_samples].clone()
-        return io.NodeOutput(trimmed_images, trimmed_audio)
+        return io.NodeOutput(trimmed_frames, trimmed_audio)
 
 
 class MiniMaxH3FiniteSegmentSampler(io.ComfyNode):
@@ -721,6 +807,23 @@ class MiniMaxH3FiniteSegmentSampler(io.ComfyNode):
                 io.Int.Input("seed", default=0, min=0, max=0xFFFFFFFFFFFFFFFF, control_after_generate=True),
                 io.Boolean.Input("continue_audio_latent", display_name="Continue Audio Latent", default=True),
                 io.Combo.Input("ref_image_size", options=["match", "max"], default="match"),
+                io.Model.Input(
+                    "audio_refine_model",
+                    display_name="Audio Refine Model (branch before the Turbo LoRA)",
+                    optional=True,
+                    tooltip=(
+                        "Optional second MiniMax H3 model for the per-segment audio refinement pass "
+                        "(ComfyUI-H3-AudioRefine). Branch it off UNETLoader/SigmaShift before the Turbo LoRA: "
+                        "pass 1 keeps turbo speed for video, refinement recovers audio on undistilled weights. "
+                        "Leave disconnected to disable refinement."
+                    ),
+                ),
+                io.Int.Input("audio_refine_steps", display_name="Audio Refine Steps", default=6, min=1, max=50),
+                io.Float.Input(
+                    "audio_refine_denoise", display_name="Audio Refine Denoise", default=0.5,
+                    min=0.05, max=1.0, step=0.05,
+                    tooltip="How far the audio stream is re-noised before refinement: 0.3-0.6 keeps pass-1 content and cleans noise, 1.0 regenerates audio from scratch.",
+                ),
             ],
             outputs=[
                 io.Latent.Output(display_name="Last Sampled Latent"),
@@ -734,12 +837,13 @@ class MiniMaxH3FiniteSegmentSampler(io.ComfyNode):
     def execute(
         cls, model, clip, vae, audio_vae, finite_plan, sampler, sigmas, seed,
         continue_audio_latent, ref_image_size="match",
+        audio_refine_model=None, audio_refine_steps=6, audio_refine_denoise=0.5,
     ):
         finite = _require_finite_plan(finite_plan)
         graph = GraphBuilder()
         previous_latent = None
         previous_images = None
-        merged_images = None
+        frames_spool = None
         merged_audio = None
         last_sampled = None
         overlap = int(finite["overlap_frames"])
@@ -800,50 +904,67 @@ class MiniMaxH3FiniteSegmentSampler(io.ComfyNode):
                 guider=guider.out(0), sampler=sampler, sigmas=sigmas,
                 latent_image=sampling_latent,
             )
+            sampled_latent = sampled.out(0)
+            # Optional per-segment audio refinement (ComfyUI-H3-AudioRefine): freeze
+            # the finished video stream and denoise the audio stream a few more
+            # steps on undistilled weights, recovering the audio quality low-step
+            # turbo passes lose.  Locked-audio renders skip it: their audio stream
+            # is pinned to the source waveform and must not be regenerated.
+            if audio_refine_model is not None and locked_audio is None:
+                refined = graph.node(
+                    "H3AudioRefineSampler", id=f"audio_refine_{number}",
+                    model=audio_refine_model, positive=continuation.out(0),
+                    negative=continuation.out(0), latent=sampled.out(0),
+                    seed=int(seed) + index, steps=int(audio_refine_steps), cfg=1.0,
+                    sampler_name="euler", scheduler="simple",
+                    audio_denoise=float(audio_refine_denoise),
+                )
+                sampled_latent = refined.out(0)
             images = graph.node(
-                "VAEDecode", id=f"decode_video_{number}", samples=sampled.out(0), vae=vae,
+                "VAEDecode", id=f"decode_video_{number}", samples=sampled_latent, vae=vae,
             )
             audio = graph.node(
-                "VAEDecodeAudio", id=f"decode_audio_{number}", samples=sampled.out(0), vae=audio_vae,
+                "VAEDecodeAudio", id=f"decode_audio_{number}", samples=sampled_latent, vae=audio_vae,
             )
             finalized = graph.node(
                 "MiniMaxH3FiniteSegmentFinalize", id=f"finalize_{number}",
-                sampled_latent=sampled.out(0), images=images.out(0), audio=audio.out(0),
+                sampled_latent=sampled_latent, images=images.out(0), audio=audio.out(0),
                 iteration=index, segment_count=int(finite["segment_count"]),
                 overlap_frames=overlap,
                 trim_audio_head=not soft_audio,
             )
-            current_images, current_audio = finalized.out(1), finalized.out(2)
-            if merged_images is None:
-                merged_images, merged_audio = current_images, current_audio
+            current_audio = finalized.out(2)
+            spool_inputs = {"frames": finalized.out(1)}
+            if frames_spool is not None:
+                spool_inputs["spool"] = frames_spool
+            frames_spool = graph.node(
+                "MiniMaxH3FiniteFrameSpool", id=f"spool_{number}", **spool_inputs,
+            ).out(0)
+            if merged_audio is None:
+                merged_audio = current_audio
             else:
-                image_join = graph.node(
-                    "ImageBatch", id=f"join_images_{number}",
-                    image1=merged_images, image2=current_images,
-                )
                 previous_audio_for_join = merged_audio
                 if soft_audio and overlap > 0:
                     previous_audio_for_join = graph.node(
                         "MiniMaxH3FiniteAudioTrimTail", id=f"trim_audio_tail_{number}",
                         audio=merged_audio, overlap_frames=overlap,
                     ).out(0)
-                audio_join = graph.node(
+                merged_audio = graph.node(
                     "AudioConcat", id=f"join_audio_{number}",
                     audio1=previous_audio_for_join, audio2=current_audio, direction="after",
-                )
-                merged_images, merged_audio = image_join.out(0), audio_join.out(0)
-            previous_latent = sampled.out(0)
+                ).out(0)
+            previous_latent = sampled_latent
             previous_images = images.out(0)
-            last_sampled = sampled.out(0)
+            last_sampled = sampled_latent
 
         target_output_frames = int(finite.get("target_output_frames") or 0)
         if target_output_frames > 0:
             output_trim = graph.node(
                 "MiniMaxH3FiniteOutputTrim", id="trim_auto_segment_output",
-                images=merged_images, audio=merged_audio,
+                frames=frames_spool, audio=merged_audio,
                 output_frames=target_output_frames,
             )
-            merged_images, merged_audio = output_trim.out(0), output_trim.out(1)
+            frames_spool, merged_audio = output_trim.out(0), output_trim.out(1)
 
         if locked_audio is not None:
             merged_audio = graph.node(
@@ -863,6 +984,14 @@ class MiniMaxH3FiniteSegmentSampler(io.ComfyNode):
             f"all segments use seed {int(seed)}; {mode_status}; "
             f"audio latent {'is locked to the source' if locked_audio is not None else ('continues' if continue_audio_latent else 'does not continue')}."
         )
+        if audio_refine_model is not None:
+            if locked_audio is not None:
+                status += " Audio refinement is skipped because the audio stream is locked to the source."
+            else:
+                status += (
+                    f" Each segment's audio stream is refined for {int(audio_refine_steps)} steps "
+                    f"at denoise {float(audio_refine_denoise):g} on the undistilled model."
+                )
         if finite.get("mode") == "timeline_segments":
             status = (
                 f"Sampled {finite['segment_count']} timeline windows; lengths={finite['segment_lengths']}; "
@@ -881,6 +1010,10 @@ class MiniMaxH3FiniteSegmentSampler(io.ComfyNode):
                 f"audio samples are removed; output is exactly the source-media "
                 f"duration ({target_output_frames} frames)."
             )
+        merged_frames = graph.node(
+            "MiniMaxH3FiniteFramesMaterialize", id="materialize_frames",
+            spool=frames_spool,
+        )
         return io.NodeOutput(
-            last_sampled, merged_images, merged_audio, status, expand=graph.finalize()
+            last_sampled, merged_frames.out(0), merged_audio, status, expand=graph.finalize()
         )
