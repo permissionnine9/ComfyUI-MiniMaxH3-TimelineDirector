@@ -336,7 +336,9 @@
         42,
         "fixed",
         true,
-        "match"
+        "match",
+        6,
+        0.5
       ],
       "widgets_values_named": {
         "seed": 42,
