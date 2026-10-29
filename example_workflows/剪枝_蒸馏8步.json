@@ -1,8 +1,8 @@
 {
   "id": "9b12006b-e843-4821-a446-95e8f8ccff69",
   "revision": 0,
-  "last_node_id": 20,
-  "last_link_id": 30,
+  "last_node_id": 24,
+  "last_link_id": 41,
   "nodes": [
     {
       "id": 6,
@@ -70,12 +70,12 @@
         "Node name for S&R": "CLIPLoader"
       },
       "widgets_values": [
-        "minimax_h3\\qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "{{MINIMAX_H3_DIR}}/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
         "minimax",
         "default"
       ],
       "widgets_values_named": {
-        "clip_name": "minimax_h3\\qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "clip_name": "{{MINIMAX_H3_DIR}}/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
         "type": "minimax",
         "device": "default"
       }
@@ -110,10 +110,10 @@
         "Node name for S&R": "VAELoader"
       },
       "widgets_values": [
-        "minimax_h3_video_vae_fp16.safetensors"
+        "{{MINIMAX_H3_DIR}}/minimax_h3_video_vae_fp16.safetensors"
       ],
       "widgets_values_named": {
-        "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+        "vae_name": "{{MINIMAX_H3_DIR}}/minimax_h3_video_vae_fp16.safetensors"
       }
     },
     {
@@ -146,10 +146,10 @@
         "Node name for S&R": "VAELoader"
       },
       "widgets_values": [
-        "minimax_h3_audio_vae_fp32.safetensors"
+        "{{MINIMAX_H3_DIR}}/minimax_h3_audio_vae_fp32.safetensors"
       ],
       "widgets_values_named": {
-        "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+        "vae_name": "{{MINIMAX_H3_DIR}}/minimax_h3_audio_vae_fp32.safetensors"
       }
     },
     {
@@ -170,7 +170,7 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 28
+          "link": 38
         }
       ],
       "outputs": [
@@ -268,7 +268,7 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 29
+          "link": 39
         },
         {
           "name": "clip",
@@ -334,13 +334,15 @@
       },
       "widgets_values": [
         42,
-        "fixed",
+        "randomize",
         true,
-        "match"
+        "match",
+        6,
+        0.5
       ],
       "widgets_values_named": {
         "seed": 42,
-        "control_after_generate": "fixed",
+        "control_after_generate": "randomize",
         "continue_audio_latent": true,
         "ref_image_size": "match"
       }
@@ -365,8 +367,7 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            28,
-            29
+            40
           ]
         }
       ],
@@ -376,11 +377,11 @@
         "Node name for S&R": "UNETLoader"
       },
       "widgets_values": [
-        "minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors",
+        "{{MINIMAX_H3_DIR}}/minimax_h3_ref2va_pruned_int8_convrot.safetensors",
         "default"
       ],
       "widgets_values_named": {
-        "unet_name": "minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors",
+        "unet_name": "{{MINIMAX_H3_DIR}}/minimax_h3_ref2va_pruned_int8_convrot.safetensors",
         "weight_dtype": "default"
       }
     },
@@ -479,18 +480,107 @@
         "Node name for S&R": "MiniMaxH3TimelinePlanner"
       },
       "widgets_values": [
-        1344,
-        768,
+        864,
+        480,
         5,
         "{\"version\":5,\"fps\":24,\"globalPrompt\":\"\",\"selection\":{\"start\":0,\"duration\":5},\"videoAudioEnabled\":true,\"videoClips\":[],\"images\":[],\"audios\":[{\"id\":\"mtvcfi39-umtp5d\",\"file\":\"minimax_h3_timeline_director/1789033627927_5x9fi_0034.wav\",\"name\":\"0034.wav\",\"duration\":15.30195,\"trimStart\":0,\"audioMode\":\"reference\"}],\"segmentConfig\":{\"count\":0,\"activeIndex\":0,\"mode\":\"legacy\",\"segments\":[]}}",
         ""
       ],
       "widgets_values_named": {
-        "width": 1344,
-        "height": 768,
+        "width": 864,
+        "height": 480,
         "generation_seconds": 5,
         "timeline_data": "{\"version\":5,\"fps\":24,\"globalPrompt\":\"\",\"selection\":{\"start\":0,\"duration\":5},\"videoAudioEnabled\":true,\"videoClips\":[],\"images\":[],\"audios\":[{\"id\":\"mtvcfi39-umtp5d\",\"file\":\"minimax_h3_timeline_director/1789033627927_5x9fi_0034.wav\",\"name\":\"0034.wav\",\"duration\":15.30195,\"trimStart\":0,\"audioMode\":\"reference\"}],\"segmentConfig\":{\"count\":0,\"activeIndex\":0,\"mode\":\"legacy\",\"segments\":[]}}",
         "minimax_h3_timeline": ""
+      }
+    },
+    {
+      "id": 24,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        30,
+        -620
+      ],
+      "size": [
+        500,
+        100
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 40
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            41
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "{{MINIMAX_H3_DIR}}/minimax_h3_turbo_v4_step600_ema.safetensors",
+        1.0
+      ],
+      "widgets_values_named": {
+        "lora_name": "{{MINIMAX_H3_DIR}}/minimax_h3_turbo_v4_step600_ema.safetensors",
+        "strength_model": 1.0
+      }
+    },
+    {
+      "id": 23,
+      "type": "MiniMaxH3SigmaShift",
+      "pos": [
+        361.09560608142135,
+        -441.66511469967674
+      ],
+      "size": [
+        320,
+        110
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 41
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            38,
+            39
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0",
+        "Node name for S&R": "MiniMaxH3SigmaShift"
+      },
+      "widgets_values": [
+        12.0,
+        3.0
+      ],
+      "widgets_values_named": {
+        "shift_video": 12.0,
+        "shift_audio": 3.0
       }
     }
   ],
@@ -560,28 +650,44 @@
       "VIDEO"
     ],
     [
-      28,
-      1,
-      0,
-      5,
-      0,
-      "MODEL"
-    ],
-    [
-      29,
-      1,
-      0,
-      8,
-      0,
-      "MODEL"
-    ],
-    [
       30,
       20,
       2,
       8,
       4,
       "MINIMAX_H3_FINITE_SEGMENT_PLAN"
+    ],
+    [
+      40,
+      1,
+      0,
+      24,
+      0,
+      "MODEL"
+    ],
+    [
+      41,
+      24,
+      0,
+      23,
+      0,
+      "MODEL"
+    ],
+    [
+      38,
+      23,
+      0,
+      5,
+      0,
+      "MODEL"
+    ],
+    [
+      39,
+      23,
+      0,
+      8,
+      0,
+      "MODEL"
     ]
   ],
   "groups": [],
@@ -602,10 +708,6 @@
       "4_minimax_h3_audio_vae_fp32.safetensors": {
         "hash": "",
         "size": 605254808
-      },
-      "1_minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors": {
-        "hash": "",
-        "size": 20980178976
       }
     },
     "frontendVersion": "1.51.10",

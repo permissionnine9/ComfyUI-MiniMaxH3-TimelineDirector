@@ -3,6 +3,7 @@
     "timeline": {
       "globalPrompt":"全局提示词", "globalPromptHint":"用于当前 GEN 区域；所有分段提示词为空时复用于每一段。", "globalPromptInactive":"已有分段提示词，全局提示词不生效；请补全每一段提示词。",
       "segmentPrompt":"本段提示词", "segmentTiming":"{start}–{end}秒 · {frames}帧 · 重叠{overlap}帧",
+      "motionRepair":"Motion Repair 强度（0 = 不启用）", "motionRepairNoLora":"尚未在 timeline_data 中配置 motion_repair_lora",
       "segmentBoundary":"首尾相接：各段独立生成，不继承上一段引导，合并不删帧",
       "segmentTimelineHelp":"自动吸附 H3 帧数 · 拖动/缩放会联动后续框 · 段间不留空隙",
       "segmentTabs":"分段时间与提示词", "segmentPlanHint":"将「分段规划」直接连接「有限分段采样」，无需有限分段展开节点",

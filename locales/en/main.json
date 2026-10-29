@@ -3,6 +3,7 @@
     "timeline": {
       "globalPrompt":"Global prompt", "globalPromptHint":"Used for the current GEN region and reused by every segment when all segment prompts are empty.", "globalPromptInactive":"Inactive because segment prompt mode is enabled; complete every segment prompt.",
       "segmentPrompt":"Prompt for this segment", "segmentTiming":"{start}–{end}s · {frames} frames · overlap {overlap} frames",
+      "motionRepair":"Motion Repair strength (0 = off)", "motionRepairNoLora":"Set motion_repair_lora in timeline_data to enable",
       "segmentBoundary":"Touching: independently generated, no previous-segment guidance or frame removal",
       "segmentTimelineHelp":"H3 frame snapping · Moving/resizing ripples later windows · No gaps",
       "segmentTabs":"Segment windows and prompts", "segmentPlanHint":"Connect Segment Plan directly to Finite Segment Sampler",

@@ -34,7 +34,7 @@
         "Node name for S&R": "KSamplerSelect"
       },
       "widgets_values": [
-        "res_multistep"
+        "euler"
       ],
       "widgets_values_named": {
         "sampler_name": "euler"
@@ -70,12 +70,12 @@
         "Node name for S&R": "CLIPLoader"
       },
       "widgets_values": [
-        "qwen3vl_32b_minimax_h3_bf16.safetensors",
+        "{{MINIMAX_H3_DIR}}/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
         "minimax",
         "default"
       ],
       "widgets_values_named": {
-        "clip_name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "clip_name": "{{MINIMAX_H3_DIR}}/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
         "type": "minimax",
         "device": "default"
       }
@@ -110,10 +110,10 @@
         "Node name for S&R": "VAELoader"
       },
       "widgets_values": [
-        "minimax_h3_video_vae_fp16.safetensors"
+        "{{MINIMAX_H3_DIR}}/minimax_h3_video_vae_fp16.safetensors"
       ],
       "widgets_values_named": {
-        "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+        "vae_name": "{{MINIMAX_H3_DIR}}/minimax_h3_video_vae_fp16.safetensors"
       }
     },
     {
@@ -146,10 +146,10 @@
         "Node name for S&R": "VAELoader"
       },
       "widgets_values": [
-        "minimax_h3_audio_vae_fp32.safetensors"
+        "{{MINIMAX_H3_DIR}}/minimax_h3_audio_vae_fp32.safetensors"
       ],
       "widgets_values_named": {
-        "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+        "vae_name": "{{MINIMAX_H3_DIR}}/minimax_h3_audio_vae_fp32.safetensors"
       }
     },
     {
@@ -189,7 +189,7 @@
       },
       "widgets_values": [
         "simple",
-        20,
+        8,
         1
       ],
       "widgets_values_named": {
@@ -334,7 +334,7 @@
       },
       "widgets_values": [
         42,
-        "fixed",
+        "randomize",
         true,
         "match",
         6,
@@ -342,7 +342,7 @@
       ],
       "widgets_values_named": {
         "seed": 42,
-        "control_after_generate": "fixed",
+        "control_after_generate": "randomize",
         "continue_audio_latent": true,
         "ref_image_size": "match"
       }
@@ -367,7 +367,7 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            41
+            40
           ]
         }
       ],
@@ -377,11 +377,11 @@
         "Node name for S&R": "UNETLoader"
       },
       "widgets_values": [
-        "minimax_h3_ref2va_int8_convrot.safetensors",
+        "{{MINIMAX_H3_DIR}}/minimax_h3_ref2va_int8_convrot.safetensors",
         "default"
       ],
       "widgets_values_named": {
-        "unet_name": "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+        "unet_name": "{{MINIMAX_H3_DIR}}/minimax_h3_ref2va_int8_convrot.safetensors",
         "weight_dtype": "default"
       }
     },
@@ -487,11 +487,55 @@
         ""
       ],
       "widgets_values_named": {
-        "width": 832,
+        "width": 864,
         "height": 480,
         "generation_seconds": 5,
         "timeline_data": "{\"version\":5,\"fps\":24,\"globalPrompt\":\"\",\"selection\":{\"start\":0,\"duration\":5},\"videoAudioEnabled\":true,\"videoClips\":[],\"images\":[],\"audios\":[{\"id\":\"mtvcfi39-umtp5d\",\"file\":\"minimax_h3_timeline_director/1789033627927_5x9fi_0034.wav\",\"name\":\"0034.wav\",\"duration\":15.30195,\"trimStart\":0,\"audioMode\":\"reference\"}],\"segmentConfig\":{\"count\":0,\"activeIndex\":0,\"mode\":\"legacy\",\"segments\":[]}}",
         "minimax_h3_timeline": ""
+      }
+    },
+    {
+      "id": 24,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        30,
+        -620
+      ],
+      "size": [
+        500,
+        100
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 40
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            41
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "{{MINIMAX_H3_DIR}}/minimax_h3_turbo_v4_step600_ema.safetensors",
+        1.0
+      ],
+      "widgets_values_named": {
+        "lora_name": "{{MINIMAX_H3_DIR}}/minimax_h3_turbo_v4_step600_ema.safetensors",
+        "strength_model": 1.0
       }
     },
     {
@@ -614,8 +658,16 @@
       "MINIMAX_H3_FINITE_SEGMENT_PLAN"
     ],
     [
-      41,
+      40,
       1,
+      0,
+      24,
+      0,
+      "MODEL"
+    ],
+    [
+      41,
+      24,
       0,
       23,
       0,

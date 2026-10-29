@@ -291,6 +291,8 @@ def _prepare_timeline_segments(source):
             "prompts": [global_prompt], "overlap_frames": 0,
             "segment_overlaps": [0], "segment_lengths": [length],
             "target_output_frames": length,
+            "motion_repair_lora": str(source["timeline"].get("motion_repair_lora") or "").strip() or None,
+            "motion_repair_strengths": [float(source["timeline"].get("motion_repair_strength") or 0.0)],
         }
 
     if config.get("mode") != "timeline" or not 1 <= count <= 64:
@@ -311,7 +313,7 @@ def _prepare_timeline_segments(source):
             raise ValueError("Enter a Global Prompt in the Material Planner, or enter a prompt for every segment")
         resolved_prompts = [global_prompt] * len(segments)
 
-    plans, prompts, overlaps, lengths = [], [], [], []
+    plans, prompts, overlaps, lengths, motion_strengths = [], [], [], [], []
     previous_start = previous_end = 0
     for index, segment in enumerate(segments):
         start, end = segment.get("startFrame"), segment.get("endFrame")
@@ -336,6 +338,7 @@ def _prepare_timeline_segments(source):
         prompts.append(resolved_prompts[index])
         overlaps.append(overlap)
         lengths.append(length)
+        motion_strengths.append(float(segment.get("motion_repair_strength") or 0.0))
         previous_start, previous_end = start, end
     return {
         "type": "minimax_h3_finite_segment_plan", "version": 3,
@@ -343,6 +346,8 @@ def _prepare_timeline_segments(source):
         "segment_count": len(plans), "segment_plans": plans, "prompts": prompts,
         "overlap_frames": 0, "segment_overlaps": overlaps,
         "segment_lengths": lengths, "target_output_frames": previous_end,
+        "motion_repair_lora": str(source["timeline"].get("motion_repair_lora") or "").strip() or None,
+        "motion_repair_strengths": motion_strengths,
     }
 
 
@@ -360,6 +365,9 @@ def _require_finite_plan(value):
         not isinstance(segment_plans, list) or len(segment_plans) != count
     ):
         raise ValueError("The long reference plan has incomplete per-segment materials")
+    strengths = value.get("motion_repair_strengths")
+    if strengths is not None and (not isinstance(strengths, list) or len(strengths) != count):
+        raise ValueError("motion_repair_strengths must be a list aligned with segment_count")
     return value
 
 
@@ -807,6 +815,36 @@ class MiniMaxH3FiniteSegmentSampler(io.ComfyNode):
                 io.Int.Input("seed", default=0, min=0, max=0xFFFFFFFFFFFFFFFF, control_after_generate=True),
                 io.Boolean.Input("continue_audio_latent", display_name="Continue Audio Latent", default=True),
                 io.Combo.Input("ref_image_size", options=["match", "max"], default="match"),
+                io.String.Input(
+                    "motion_repair_lora",
+                    display_name="Motion Repair LoRA",
+                    default="",
+                    tooltip=(
+                        "Visible Motion_Repair LoRA filename. A non-empty value overrides the "
+                        "timeline plan's hidden motion_repair_lora field; leave empty to follow "
+                        "the plan. What you see on the node is what runs."
+                    ),
+                ),
+                io.String.Input(
+                    "motion_repair_strengths",
+                    display_name="Motion Repair Strengths (per segment)",
+                    default="",
+                    tooltip=(
+                        "Comma-separated per-segment strengths, e.g. 0,0.3,0,0.5,0. A non-empty "
+                        "list overrides the timeline plan's hidden per-segment values and its "
+                        "length must equal the segment count; leave empty to follow the plan."
+                    ),
+                ),
+                io.Float.Input(
+                    "motion_repair_scale",
+                    display_name="Motion Repair Scale",
+                    default=1.0, min=0.0, max=2.0, step=0.05,
+                    tooltip=(
+                        "Global multiplier on every segment's Motion_Repair strength: 0 disables "
+                        "the LoRA everywhere (quick A/B debugging), 1.0 keeps the configured "
+                        "per-segment doses."
+                    ),
+                ),
                 io.Model.Input(
                     "audio_refine_model",
                     display_name="Audio Refine Model (branch before the Turbo LoRA)",
@@ -837,6 +875,7 @@ class MiniMaxH3FiniteSegmentSampler(io.ComfyNode):
     def execute(
         cls, model, clip, vae, audio_vae, finite_plan, sampler, sigmas, seed,
         continue_audio_latent, ref_image_size="match",
+        motion_repair_lora="", motion_repair_strengths="", motion_repair_scale=1.0,
         audio_refine_model=None, audio_refine_steps=6, audio_refine_denoise=0.5,
     ):
         finite = _require_finite_plan(finite_plan)
@@ -855,6 +894,29 @@ class MiniMaxH3FiniteSegmentSampler(io.ComfyNode):
                 "Drift-Control AV requires a sigma schedule with at least one sampling step"
             )
 
+        # Motion_Repair 可见化：节点 widget 非空时以画布值为准（所见即所跑），
+        # 留空回退 timeline plan 的隐藏字段；scale 全局乘在逐段强度上（0=一键禁用）。
+        lora_override = str(motion_repair_lora or "").strip()
+        active_repair_lora = lora_override or str(finite.get("motion_repair_lora") or "").strip()
+        strengths_override = str(motion_repair_strengths or "").strip()
+        if strengths_override:
+            try:
+                base_strengths = [float(part.strip()) for part in strengths_override.split(",")]
+            except ValueError as exc:
+                raise ValueError(
+                    "Motion Repair Strengths must be comma-separated numbers, "
+                    "e.g. 0,0.3,0,0.5,0"
+                ) from exc
+            if len(base_strengths) != int(finite["segment_count"]):
+                raise ValueError(
+                    f"Motion Repair Strengths lists {len(base_strengths)} values but the plan "
+                    f"has {int(finite['segment_count'])} segments"
+                )
+        else:
+            base_strengths = [float(s) for s in (finite.get("motion_repair_strengths") or [])]
+        repair_scale = float(motion_repair_scale)
+        motion_repair_segments = []
+
         for index, prompt in enumerate(finite["prompts"]):
             number = index + 1
             overlap = int(finite.get("segment_overlaps", [overlap] * finite["segment_count"])[index])
@@ -865,12 +927,34 @@ class MiniMaxH3FiniteSegmentSampler(io.ComfyNode):
                 plan=segment_plan,
                 prompt=prompt, ref_image_size=ref_image_size,
             )
+            # Per-segment Motion_Repair LoRA: when a segment declares a positive
+            # strength, route the shared base model through a LoraLoaderModelOnly
+            # node so the patch applies only to this segment's downstream chain;
+            # other segments keep using the untouched base model.  Cloning and
+            # patching happen lazily inside ComfyUI's model wrapper, so the cost
+            # is one extra patch list per flagged segment, not a model reload.
+            working_model = model
+            if active_repair_lora:
+                configured = float(base_strengths[index]) if index < len(base_strengths) else 0.0
+                strength = configured * repair_scale
+                print(
+                    f"[MiniMaxH3TimelineDirector] Segment {number}/{int(finite['segment_count'])}: "
+                    f"Motion_Repair {active_repair_lora} @ {strength:g} "
+                    f"(configured {configured:g} × scale {repair_scale:g})",
+                    flush=True,
+                )
+                if strength > 0.0:
+                    working_model = graph.node(
+                        "LoraLoaderModelOnly", id=f"motion_repair_lora_{number}",
+                        model=model, lora_name=active_repair_lora, strength_model=strength,
+                    ).out(0)
+                    motion_repair_segments.append((number, strength))
             continuation_inputs = {
                 "positive": encoder.out(0), "target_latent": encoder.out(1),
                 "iteration": index, "segment_count": int(finite["segment_count"]),
                 "overlap_frames": overlap,
                 "continue_audio_latent": bool(continue_audio_latent) and locked_audio is None,
-                "model": model, "sigmas": sigmas,
+                "model": working_model, "sigmas": sigmas,
             }
             if previous_latent is not None and overlap > 0:
                 continuation_inputs["previous_latent"] = previous_latent
@@ -1003,6 +1087,18 @@ class MiniMaxH3FiniteSegmentSampler(io.ComfyNode):
                     " The source soundtrack is encoded into every segment with a zero audio "
                     "denoise mask; final audio is the original continuous waveform."
                 )
+        if motion_repair_segments:
+            applied = ", ".join(f"seg{n}@{s:g}" for n, s in motion_repair_segments)
+            source = "node widget" if strengths_override else "timeline plan"
+            status += (
+                f" Motion_Repair LoRA ({active_repair_lora}) applied to: {applied} "
+                f"[strengths from {source}, scale {repair_scale:g}]."
+            )
+        elif active_repair_lora:
+            status += (
+                f" Motion_Repair LoRA ({active_repair_lora}) configured but inactive "
+                f"(all per-segment strengths are 0 or scale is {repair_scale:g})."
+            )
         if target_output_frames > 0:
             trim_tail_frames = int(finite.get("trim_tail_frames") or 0)
             status += (

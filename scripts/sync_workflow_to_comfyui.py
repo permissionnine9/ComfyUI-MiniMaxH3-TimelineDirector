@@ -22,7 +22,7 @@ from pathlib import Path
 PROJECT_DIR = Path(__file__).resolve().parent.parent      # 本工程根目录
 MONEY_PRINTER_DIR = PROJECT_DIR.parent.parent             # money-printer 项目根
 
-UI_WORKFLOW_PATH = PROJECT_DIR / "example_workflows/MiniMaxH3全功能合一完全体导演台工作流.json"
+UI_WORKFLOW_PATH = PROJECT_DIR / "example_workflows/剪枝_蒸馏 8 步.json"
 DB_PATH = MONEY_PRINTER_DIR / "data/sessions.db"
 COMFYUI_BASE_URL = "http://127.0.0.1:8188"
 # 写到服务器的独立工作流文件（不覆盖原工作流，避免与界面手动编辑冲突）
@@ -57,7 +57,13 @@ def inject_ui_workflow(timeline_data: dict) -> dict:
                 except json.JSONDecodeError:
                     continue
                 if isinstance(parsed, dict) and "segmentConfig" in parsed:
-                    node["widgets_values"][i] = json.dumps(timeline_data, ensure_ascii=False)
+                    injected = json.dumps(timeline_data, ensure_ascii=False)
+                    node["widgets_values"][i] = injected
+                    # widgets_values_named 与 widgets_values 需保持一致，否则开启
+                    # NamedValuesRestore 实验开关或读取 named 的工具会拿到陈旧值
+                    named = node.get("widgets_values_named")
+                    if isinstance(named, dict) and "timeline_data" in named:
+                        named["timeline_data"] = injected
                     replaced += 1
     if not replaced:
         raise SystemExit("UI 工作流中未找到 MiniMaxH3TimelinePlanner 的 timeline_data widget")

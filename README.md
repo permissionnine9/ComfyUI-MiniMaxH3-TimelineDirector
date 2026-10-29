@@ -1,6 +1,6 @@
 # ComfyUI MiniMax H3 Timeline Director
 
-Start with the [**MiniMaxH3 All-in-One Full Timeline Director workflow**](example_workflows/MiniMaxH3全功能合一完全体导演台工作流.json):
+Start with the [**MiniMaxH3 All-in-One Full Timeline Director workflow**](example_workflows/剪枝_蒸馏%208%20步.json):
 one lightweight graph covers text-to-video, image reference, audio-driven generation, video editing,
 character replacement, motion transfer, digital humans, and manually segmented long-video generation. It now also supports **long-form digital humans and character singing**: a reference image preserves identity while a locked long soundtrack is sample-sliced across GEN windows, injected into every segment's AV latent, and restored continuously in the final output.
 
@@ -14,11 +14,11 @@ AV-latent tail, adaptive Drift-Control video masking, Soft AV audio continuity, 
 the segment count—without generic Loop nodes or duplicated sampler chains. Practical length is limited
 only by local VRAM, RAM, disk space, and ComfyUI execution limits.
 
-[Download the all-in-one workflow](example_workflows/MiniMaxH3全功能合一完全体导演台工作流.json) ·
+[Download the all-in-one workflow](example_workflows/剪枝_蒸馏%208%20步.json) ·
 [Chinese guide](docs/FINITE_SEGMENT_EXPANSION_CN.md) ·
 [Chinese prompt specification](docs/MiniMax_H3_循环分段提示词_Agent规范.md)
 
-[![Lightweight unlimited-length workflow](https://github.com/Songssx/ComfyUI-MiniMaxH3-TimelineDirector/releases/download/v0.6.0/infinite-workflow.webp)](example_workflows/MiniMaxH3全功能合一完全体导演台工作流.json)
+[![Lightweight unlimited-length workflow](https://github.com/Songssx/ComfyUI-MiniMaxH3-TimelineDirector/releases/download/v0.6.0/infinite-workflow.webp)](example_workflows/剪枝_蒸馏%208%20步.json)
 
 ### Two directly generated, approximately one-minute examples
 
@@ -108,7 +108,7 @@ Only the following two examples are shipped. The first is the normal generation 
 
 ### 1. All-in-One Full Timeline Director (recommended)
 
-[Download workflow](example_workflows/MiniMaxH3全功能合一完全体导演台工作流.json)
+[Download workflow](example_workflows/剪枝_蒸馏%208%20步.json)
 
 This is the **all-task, lightweight, no-rewiring** workflow. Configure only the Material Planner's media, time windows, and prompts to run:
 

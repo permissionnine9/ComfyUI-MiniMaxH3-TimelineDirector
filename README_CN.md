@@ -2,7 +2,7 @@
 
 简体中文 · [English](README.md)
 
-首选入口是 [**MiniMaxH3 全功能合一完全体导演台工作流**](example_workflows/MiniMaxH3全功能合一完全体导演台工作流.json)：
+首选入口是 [**剪枝_蒸馏8步**](example_workflows/剪枝_蒸馏%208%20步.json)：
 一套轻量工作流同时覆盖文生视频、参考图生视频、参考音频驱动、视频编辑、人物替换、动作迁移、数字人以及手动分段长视频生成，无需为不同任务更换节点图。现在还支持**长视频数字人和长视频角色唱歌**：参考图负责角色身份，长音频可锁定为原声并按 GEN 时间框自动切片、注入每段 AV Latent，最终连续回填原始音轨。
 
 ## 核心能力：轻量级无限时长视频生成
@@ -12,11 +12,11 @@
 只需增加分段数量即可继续延长视频，不依赖已被关闭的通用 Loop PR，也不需要在画布上
 手工复制多套采样节点。实际可生成长度只受本机显存、内存、磁盘空间及 ComfyUI 单次执行能力限制。
 
-[下载全功能合一工作流](example_workflows/MiniMaxH3全功能合一完全体导演台工作流.json) ·
+[下载全功能合一工作流](example_workflows/剪枝_蒸馏%208%20步.json) ·
 [使用说明](docs/FINITE_SEGMENT_EXPANSION_CN.md) ·
 [分段提示词 Agent 规范](docs/MiniMax_H3_循环分段提示词_Agent规范.md)
 
-[![轻量级无限时长工作流](https://github.com/Songssx/ComfyUI-MiniMaxH3-TimelineDirector/releases/download/v0.6.0/infinite-workflow.webp)](example_workflows/MiniMaxH3全功能合一完全体导演台工作流.json)
+[![轻量级无限时长工作流](https://github.com/Songssx/ComfyUI-MiniMaxH3-TimelineDirector/releases/download/v0.6.0/infinite-workflow.webp)](example_workflows/剪枝_蒸馏%208%20步.json)
 
 ### 约一分钟直接生成案例
 
@@ -105,7 +105,7 @@ git clone https://github.com/Songssx/ComfyUI-MiniMaxH3-TimelineDirector.git
 
 ### 1. 全功能合一完全体导演台（推荐）
 
-[下载工作流](example_workflows/MiniMaxH3全功能合一完全体导演台工作流.json)
+[下载工作流](example_workflows/剪枝_蒸馏%208%20步.json)
 
 这是一套 **全任务、轻量级、无需换图** 的主工作流，仅通过素材规划台的素材、时间框和提示词配置，即可完成：
 

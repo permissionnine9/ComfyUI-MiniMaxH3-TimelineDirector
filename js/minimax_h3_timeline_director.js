@@ -1,5 +1,5 @@
-import { app } from "/scripts/app.js";
-import { api } from "/scripts/api.js";
+import { app } from "../../../../../../../scripts/app.js";
+import { api } from "../../../../../../../scripts/api.js";
 import { createWindows, editWindow } from "./segment_windows.mjs";
 
 const TIMELINE_NODE_NAMES = new Set(["MiniMaxH3TimelinePlanner", "MiniMaxH3TimelineDirector"]);
@@ -12,6 +12,7 @@ const TIMELINE_EN = {
   globalPrompt: "Global prompt", globalPromptHint: "Used for the current GEN region and reused by every segment when all segment prompts are empty.",
   globalPromptInactive: "Inactive because segment prompt mode is enabled; complete every segment prompt.",
   segmentPrompt: "Prompt for this segment", segmentTiming: "{start}–{end}s · {frames} frames · overlap {overlap} frames",
+  motionRepair: "Motion Repair strength (0 = off)", motionRepairNoLora: "Set motion_repair_lora in timeline_data to enable",
   segmentBoundary: "Touching: independently generated, no previous-segment guidance or frame removal",
   segmentTimelineHelp: "H3 frame snapping · Moving/resizing ripples later windows · No gaps",
   segmentTabs: "Segment windows and prompts", segmentPlanHint: "Connect Segment Plan directly to Finite Segment Sampler",
@@ -197,10 +198,10 @@ function installStyles() {
     .m3td-audio-mode.locked { color:#91f1d7; border-color:#3fae91; }
     .m3td-mode-badge { position:absolute; right:3px; top:22px; z-index:2; padding:1px 3px; border-radius:3px;
       color:#91f1d7; background:#103b34; font-size:9px; }
-    .m3td-asset-tag { position:absolute; left:3px; top:2px; z-index:2; padding:1px 3px; border-radius:3px;
-      color:#fff4c9; background:#111c; font-size:10px; font-weight:700; }
+    .m3td-asset-tag { position:absolute; left:3px; top:2px; z-index:2; padding:1px 3px; border-radius:3px; max-width:calc(100% - 24px);
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#fff4c9; background:#111c; font-size:10px; font-weight:700; }
     .m3td-asset-name { position:absolute; left:3px; right:3px; bottom:2px; padding:1px 2px; overflow:hidden; text-overflow:ellipsis;
-      white-space:nowrap; background:#000a; color:#fff; font-size:10px; }
+      white-space:nowrap; background:#000a; color:#fff; font-size:8px; }
     .m3td-asset-x { position:absolute; right:2px; top:2px; width:17px; height:17px; border:0; border-radius:50%; color:#fff;
       background:#9c3345cc; cursor:pointer; }
     .m3td-segments { padding:8px; border-top:1px solid var(--line); background:#0d1219; }
@@ -212,6 +213,10 @@ function installStyles() {
     .m3td-segment-tabs { display:flex; flex-wrap:wrap; gap:6px; }
     .m3td-segment-list p { margin:4px 8px; color:var(--muted); }
     .m3td-prompt-label { display:block; padding:8px; }
+    .m3td-motion-label { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:6px 8px 0; padding:4px 8px;
+      color:#a9b7cc; background:#101620; border:1px solid #394459; border-radius:5px; cursor:help; }
+    .m3td-motion-input { width:72px; color:#dce6f6; background:#0d1219; border:1px solid #394459; border-radius:4px; padding:3px 6px; }
+    .m3td-motion-input:disabled { opacity:.45; cursor:not-allowed; }
     .m3td-segment-prompt { display:block; box-sizing:border-box; width:100%; height:180px; margin-top:5px;
       resize:none; overflow:auto; color:#dce6f6; background:#0d1219; border:1px solid #394459; padding:8px; }
     .m3td-window { background:transparent; }
@@ -226,7 +231,7 @@ function installStyles() {
     .m3td-segment-bin.drag-over { border-color:var(--cyan); background:#102421; }
     .m3td-segment-bin-label { margin:0 0 4px 2px; color:#8e9bb0; font-size:10px; }
     .m3td-segment-bin-list { min-height:46px; display:flex; flex-wrap:wrap; align-content:flex-start; gap:4px; }
-    .m3td-segment .m3td-asset { width:72px; height:44px; }
+    .m3td-segment .m3td-asset { width:120px; height:56px; }
     .m3td-segment .m3td-asset.audio { width:112px; }
     .m3td-foot { display:flex; align-items:center; gap:9px; min-height:31px; padding:5px 9px; color:#8f9bad; background:#141922; }
     .m3td-tags { color:#a9d8d4; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -317,7 +322,7 @@ window.addEventListener("wheel",event=>{
 },{capture:true,passive:false});
 
 function emptyState() {
-  return { version: 5, fps: 24, globalPrompt:"", selection: { start: 0, duration: 5 }, videoAudioEnabled: true, videoClips: [], images: [], audios: [], segmentConfig:{count:0,segments:[]} };
+  return { version: 5, fps: 24, globalPrompt:"", selection: { start: 0, duration: 5 }, videoAudioEnabled: true, videoClips: [], images: [], audios: [], segmentConfig:{count:0,segments:[]}, motion_repair_lora:"", motion_repair_strength:0 };
 }
 
 function normalizedAssetIds(values, validIds) {
@@ -336,6 +341,8 @@ function normalizeState(raw) {
   base.selection.start = Math.max(0, num(raw.selection?.start, 0));
   base.selection.duration = Math.max(5 / 24, num(raw.selection?.duration, 5));
   base.videoAudioEnabled = raw.videoAudioEnabled !== false;
+  base.motion_repair_lora = String(raw.motion_repair_lora || "");
+  base.motion_repair_strength = clamp(num(raw.motion_repair_strength, 0), 0, 0.7);
   base.videoClips = Array.isArray(raw.videoClips) ? raw.videoClips.filter(x => x?.file).map(c => ({
     id: c.id || uid(), file: c.file, name: c.name || c.file.split(/[\\/]/).pop(), start: Math.max(0, num(c.start)),
     duration: Math.max(5 / 24, num(c.duration, 5)), trimStart: Math.max(0, num(c.trimStart)),
@@ -352,7 +359,7 @@ function normalizeState(raw) {
   const sourceSegments=Array.isArray(rawConfig.segments)?rawConfig.segments:[];
   base.segmentConfig={count,activeIndex:clamp(Math.floor(num(rawConfig.activeIndex)),0,Math.max(0,count-1)),mode:rawConfig.mode==="timeline"?"timeline":"legacy",segments:Array.from({length:count},(_,index)=>{
     const segment=sourceSegments[index]&&typeof sourceSegments[index]==="object"?sourceSegments[index]:{};
-    return {...segment,images:normalizedAssetIds(segment.images,imageIds),audios:normalizedAssetIds(segment.audios,audioIds),prompt:String(segment.prompt||"")};
+    return {...segment,images:normalizedAssetIds(segment.images,imageIds),audios:normalizedAssetIds(segment.audios,audioIds),prompt:String(segment.prompt||""),motion_repair_strength:clamp(num(segment.motion_repair_strength,0),0,0.7)};
   })};
   return base;
 }
@@ -1305,6 +1312,8 @@ class TimelineDirectorUI {
     const count=clamp(Math.floor(num(this.segmentCountDraft,0)),0,64);
     const previous=Array.isArray(this.state.segmentConfig?.segments)?this.state.segmentConfig.segments:[];
     this.state.segmentConfig={count,mode:"timeline",segments:createWindows(previous,count,this.state.selection.duration*24)};
+    // Carry the legacy top-level strength into new windows so switching modes never silently disables Motion Repair.
+    for(const segment of this.state.segmentConfig.segments)segment.motion_repair_strength=num(segment.motion_repair_strength,this.state.motion_repair_strength);
     this.activeSegment=Math.min(this.activeSegment||0,Math.max(0,count-1));
     if(count)this.selectWindowGeometry();
     this.segmentCountDraft=count;
@@ -1352,7 +1361,7 @@ class TimelineDirectorUI {
       <div class="m3td-segment-bins">
         <div class="m3td-segment-bin" data-segment-drop="images" data-segment-index="${index}"><label class="m3td-segment-bin-label">${esc(tr("segmentImages"))}</label><div class="m3td-segment-bin-list">${segment.images.map((id,i)=>this.segmentAssetHTML("images",id,i,index)).join("")}</div></div>
         <div class="m3td-segment-bin" data-segment-drop="audios" data-segment-index="${index}"><label class="m3td-segment-bin-label">${esc(tr("segmentAudio"))}</label><div class="m3td-segment-bin-list">${segment.audios.map((id,i)=>this.segmentAssetHTML("audios",id,i,index)).join("")}</div></div>
-      </div>${timelineMode?`<label class="m3td-prompt-label">${esc(tr("segmentPrompt"))}<textarea class="m3td-segment-prompt" data-segment-prompt="${index}" placeholder="${esc(tr("segmentPrompt"))}">${esc(segment.prompt||"")}</textarea></label>${index&&overlap===0?`<p>${esc(tr("segmentBoundary"))}</p>`:""}`:""}</section>`;
+      </div>${timelineMode?`<label class="m3td-motion-label" title="${esc(this.state.motion_repair_lora||tr("motionRepairNoLora"))}"><span>${esc(tr("motionRepair"))}</span><input type="number" class="m3td-motion-input" data-segment-motion="${index}" min="0" max="0.7" step="0.1" value="${num(segment.motion_repair_strength,0)}"${this.state.motion_repair_lora?"":" disabled"}></label><label class="m3td-prompt-label">${esc(tr("segmentPrompt"))}<textarea class="m3td-segment-prompt" data-segment-prompt="${index}" placeholder="${esc(tr("segmentPrompt"))}">${esc(segment.prompt||"")}</textarea></label>${index&&overlap===0?`<p>${esc(tr("segmentBoundary"))}</p>`:""}`:""}</section>`;
     }).join("");
     for(const button of list.querySelectorAll("[data-select-segment]"))button.onclick=()=>{
       this.activeSegment=num(button.dataset.selectSegment);this.selectWindowGeometry();this.sync();this.render();
@@ -1360,6 +1369,10 @@ class TimelineDirectorUI {
     for(const input of list.querySelectorAll("[data-segment-prompt]")){
       input.oninput=()=>{this.state.segmentConfig.segments[num(input.dataset.segmentPrompt)].prompt=input.value;this.sync();this.renderGlobalPromptState();};
       // Keep text editing inside the DOM widget under Nodes 2.0.
+      for(const event of ["pointerdown","keydown","keyup"])input.addEventListener(event,e=>e.stopPropagation());
+    }
+    for(const input of list.querySelectorAll("[data-segment-motion]")){
+      input.oninput=()=>{this.state.segmentConfig.segments[num(input.dataset.segmentMotion)].motion_repair_strength=clamp(num(input.value),0,0.7);this.sync();};
       for(const event of ["pointerdown","keydown","keyup"])input.addEventListener(event,e=>e.stopPropagation());
     }
     for(const button of list.querySelectorAll("[data-remove-segment-asset]"))button.onclick=event=>{
