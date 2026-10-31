@@ -1,8 +1,8 @@
 {
   "id": "9b12006b-e843-4821-a446-95e8f8ccff69",
   "revision": 0,
-  "last_node_id": 25,
-  "last_link_id": 42,
+  "last_node_id": 27,
+  "last_link_id": 44,
   "nodes": [
     {
       "id": 6,
@@ -337,9 +337,6 @@
         "randomize",
         true,
         "max",
-        "",
-        "",
-        1.0,
         6,
         0.5
       ],
@@ -347,10 +344,7 @@
         "seed": 42,
         "control_after_generate": "randomize",
         "continue_audio_latent": true,
-        "ref_image_size": "max",
-        "motion_repair_lora": "",
-        "motion_repair_strengths": "",
-        "motion_repair_scale": 1.0
+        "ref_image_size": "max"
       }
     },
     {
@@ -383,11 +377,11 @@
         "Node name for S&R": "UNETLoader"
       },
       "widgets_values": [
-        "{{MINIMAX_H3_DIR}}/minimax_h3_ref2va_int8_convrot.safetensors",
+        "{{MINIMAX_H3_DIR}}/minimax_h3_fl2va_int8_convrot.safetensors",
         "default"
       ],
       "widgets_values_named": {
-        "unet_name": "{{MINIMAX_H3_DIR}}/minimax_h3_ref2va_int8_convrot.safetensors",
+        "unet_name": "{{MINIMAX_H3_DIR}}/minimax_h3_fl2va_int8_convrot.safetensors",
         "weight_dtype": "default"
       }
     },
@@ -459,6 +453,22 @@
           "shape": 7,
           "type": "INT",
           "link": null
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": 43
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": 44
         }
       ],
       "outputs": [
@@ -588,6 +598,106 @@
         "lora_name": "{{MINIMAX_H3_DIR}}/Minimax H3真实电影质感V0.1.safetensors",
         "strength_model": 0.5
       }
+    },
+    {
+      "id": 26,
+      "type": "ResolutionSelector",
+      "pos": [
+        -258.7623091216408,
+        300
+      ],
+      "size": [
+        270,
+        170
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "showAdvanced": false,
+      "inputs": [
+        {
+          "localized_name": "宽高比",
+          "name": "aspect_ratio",
+          "type": "COMBO",
+          "widget": {
+            "name": "aspect_ratio"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "百万像素",
+          "name": "megapixels",
+          "type": "FLOAT",
+          "widget": {
+            "name": "megapixels"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "倍数",
+          "name": "multiple",
+          "type": "INT",
+          "widget": {
+            "name": "multiple"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "宽度",
+          "name": "width",
+          "type": "INT",
+          "links": [
+            43
+          ]
+        },
+        {
+          "localized_name": "高度",
+          "name": "height",
+          "type": "INT",
+          "links": [
+            44
+          ]
+        }
+      ],
+      "title": "Resolution Selector (Size)",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.30.0",
+        "Node name for S&R": "ResolutionSelector"
+      },
+      "widgets_values": [
+        "16:9 (Widescreen)",
+        0.4,
+        32
+      ],
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 27,
+      "type": "MarkdownNote",
+      "pos": [
+        -258.7623091216408,
+        580
+      ],
+      "size": [
+        300,
+        520
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Size Settings Reference",
+      "properties": {},
+      "widgets_values": [
+        "| megapixels | Aspect | Output (multiple=32) |\n|---|---|---|\n| 0.2 | 16:9 | 608 x 352 |\n| 0.3 | 16:9 | 736 x 416 |\n| 0.4 | 16:9 | 864 x 480 |\n| 0.5 | 16:9 | 960 x 544 |\n| 0.6 | 16:9 | 1056 x 608 |\n| 0.7 | 16:9 | 1152 x 640 |\n| 0.8 | 16:9 | 1216 x 672 |\n| 0.9 | 16:9 | 1280 x 736 |\n| 0.98 | 16:9 | 1344 x 768 |\n| 1.0 | 16:9 | 1376 x 768 |\n| 1.2 | 16:9 | 1504 x 832 |\n| 1.5 | 16:9 | 1664 x 928 |\n| 1.8 | 16:9 | 1824 x 1024 |\n| 2.0 | 16:9 | 1920 x 1088 |\n"
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
     }
   ],
   "links": [
@@ -694,6 +804,22 @@
       23,
       0,
       "MODEL"
+    ],
+    [
+      43,
+      26,
+      0,
+      20,
+      1,
+      "INT"
+    ],
+    [
+      44,
+      26,
+      1,
+      20,
+      2,
+      "INT"
     ]
   ],
   "groups": [],

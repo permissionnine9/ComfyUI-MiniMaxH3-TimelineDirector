@@ -1436,7 +1436,8 @@
                     "name": "MODEL",
                     "type": "MODEL",
                     "links": [
-                        298
+                        299,
+                        300
                     ]
                 }
             ],
@@ -1534,78 +1535,6 @@
                 "scheduler": "simple",
                 "steps": 20,
                 "denoise": 1
-            }
-        },
-        {
-            "id": 148,
-            "type": "LoraLoaderModelOnly",
-            "pos": [
-                -1492.7777493055282,
-                5225.5991544077415
-            ],
-            "size": [
-                640,
-                90
-            ],
-            "flags": {},
-            "order": 21,
-            "mode": 0,
-            "inputs": [
-                {
-                    "localized_name": "模型",
-                    "name": "model",
-                    "type": "MODEL",
-                    "link": 298
-                },
-                {
-                    "localized_name": "LoRA名称",
-                    "name": "lora_name",
-                    "type": "COMBO",
-                    "widget": {
-                        "name": "lora_name"
-                    },
-                    "link": null
-                },
-                {
-                    "localized_name": "模型强度",
-                    "name": "strength_model",
-                    "type": "FLOAT",
-                    "widget": {
-                        "name": "strength_model"
-                    },
-                    "link": null
-                }
-            ],
-            "outputs": [
-                {
-                    "localized_name": "模型",
-                    "name": "MODEL",
-                    "type": "MODEL",
-                    "links": [
-                        299,
-                        300
-                    ]
-                }
-            ],
-            "properties": {
-                "cnr_id": "comfy-core",
-                "ver": "0.33.0",
-                "Node name for S&R": "LoraLoaderModelOnly",
-                "models": [
-                    {
-                        "name": "minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors",
-                        "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/loras/minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors",
-                        "directory": "loras"
-                    }
-                ]
-            },
-            "widgets_values": [
-                "Motion_Repair_V2.safetensors",
-                0.5
-            ],
-            "widgets_values_named": {
-                "lora_name": "Motion_Repair_V2.safetensors",
-                "strength_model": 1
             }
         },
         {
@@ -2398,16 +2327,8 @@
             "MODEL"
         ],
         [
-            298,
-            147,
-            0,
-            148,
-            0,
-            "MODEL"
-        ],
-        [
             299,
-            148,
+            147,
             0,
             141,
             0,
@@ -2415,7 +2336,7 @@
         ],
         [
             300,
-            148,
+            147,
             0,
             145,
             0,
